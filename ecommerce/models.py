@@ -1,8 +1,13 @@
 from django.contrib.auth.models import User
 from django.db import models
 from django.template.defaultfilters import slugify
+from PIL import Image
 
-
+STATUS_CHOICES = (
+    ('PD', 'Pending'),
+    ('PC', 'Processing'),
+    ('SP', 'Shiped'),
+)
 class Brand(models.Model):
     name = models.CharField(max_length=255)
 
@@ -13,7 +18,7 @@ class Brand(models.Model):
 class Product(models.Model):
     title = models.CharField(max_length=255)
     slug = models.SlugField(blank=True)
-    #picture = models.ImageField()
+    picture = models.ImageField(default='', upload_to='uploads/')
     price = models.DecimalField(decimal_places=2, max_digits=24, default=0)
     brand = models.ForeignKey(Brand)
     category = models.ForeignKey('Category')
@@ -28,6 +33,7 @@ class Product(models.Model):
 
         super(Product, self).save(*args, **kwargs)
 
+
     def __str__(self):
         return "%s (%s) - %s" % (self.title, self.brand.name, self.category.name)
 
@@ -41,9 +47,22 @@ class Category(models.Model):
 
 
 class Cart(models.Model):
-    # Homework
-    pass
+    delivery_name = models.CharField(max_length=30,default='')
+    delivery_address = models.TextField(blank=True, default='')
+    payment_method = models.CharField(blank=True, max_length=20, default='')
+    paid = models.BooleanField(default=False)
+    total_discout = models.FloatField(default=0)
+    created_by = models.ForeignKey(User,default=0)
+
+    def __str__(self):
+        return 'Order #%d a/n %s ' % (self.id, self.delivery_name)
+
 
 class CartItem(models.Model):
-    # Homework
-    pass
+    product = models.ForeignKey(Product,default=0)
+    items = models.IntegerField(default=0)
+    discount_per_product = models.FloatField(default=0)
+    cart = models.ForeignKey(Cart,default='')
+
+    def __str__(self):
+        return self.product.title
